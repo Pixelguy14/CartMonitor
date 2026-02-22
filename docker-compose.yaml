@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Capa de Aplicación (PHP 8.2 + Apache)
+  # Esta capa almacena información de los usuarios registrados en el e-commerce.
+  nexus-app:
+    build: .
+    container_name: nexus_cart_app
+    ports:
+      - "8081:80" # Evitamos el 8080. Acceso vía http://localhost:8081
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - DB_HOST=nexus-db
+      - DB_NAME=nexus_cart
+      - DB_USER=nexus_user
+      - DB_PASS=nexus_password
+    networks:
+      - nexus-network
+
+  # Capa de Datos (MySQL 8.0)
+  # Esta capa almacena información de los usuarios registrados en el e-commerce.
+  nexus-db:
+    image: mysql:8.0
+    container_name: nexus_cart_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: nexus_cart
+      MYSQL_USER: nexus_user
+      MYSQL_PASSWORD: nexus_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3307:3306" # Mapeo externo 3307 para no chocar con MySQLs locales
+    volumes:
+      - nexus_db_data:/var/lib/mysql
+    networks:
+      - nexus-network
+
+# Con este comando se crea una red virtual entre los contenedores
+networks:
+  nexus-network:
+    driver: bridge
+
+# Con este comando se crea un volumen para persistir los datos de la base de datos
+volumes:
+  nexus_db_data:
