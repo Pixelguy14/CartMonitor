@@ -4,7 +4,16 @@ Ejercicio de arquitectura en capas con seguridad básica y despliegue moderno.
 
 ## explicacion de la arquitectura
 
-docker-compose up -d --build
+docker compose up -d --build
+
+docker ps # verificar los contenedores activos
+
+docker logs cartmonitor_app # verificar logs del contenedor
+
+docker stop cartmonitor_app # detener contenedor
+docker stop cartmonitor_db # detener contenedor
+docker rm cartmonitor_app -f # eliminar contenedor
+docker rm cartmonitor_db -f # eliminar contenedor
 
 Accede en http://localhost:8080. 
 
