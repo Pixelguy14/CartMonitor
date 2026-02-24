@@ -20,8 +20,8 @@ class Config
         foreach ($lines as $line) {
             if (strpos(trim($line), '#') === 0)
                 continue;
-            list($name, $value) = explode('=', $line, 2);
-            self::$settings[trim($name)] = trim($value);
+            list($name, $value) = explode('=', $line, 2); // Se separa la linea en dos partes, la clave y el valor
+            self::$settings[trim($name)] = trim($value); // Se almacena la clave y el valor en el array $settings
         }
     }
 

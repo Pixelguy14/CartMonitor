@@ -6,6 +6,8 @@ namespace App\Core;
 // con base al namespace y el directorio raiz del proyecto
 class Autoloader
 {
+    // spl_autoload_register es una funcion de php que permite registrar una funcion de autoloader
+    // que se ejecutara cada vez que se intente instanciar una clase que no ha sido cargada
     public static function register()
     {
         spl_autoload_register(function ($class) {

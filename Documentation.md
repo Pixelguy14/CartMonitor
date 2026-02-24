@@ -69,6 +69,17 @@ y docker compose para orquestar todo.
 dbdiagram.io fue usado para generar el diagrama entidad relacion de la base de datos.
 ![Diagrama de Entidad Relacion](/public/images/Diagrama_entidad_relacion.png)
 
+¿Cómo insertamos datos de prueba al docker?
+```bash
+docker exec -i cartmonitor_db mysql -u CartMonitor_user -pCartMonitor_password CartMonitor <<EOF
+INSERT INTO users (username, email, type, password_hash) 
+VALUES ('proveedor1', 'pro@test.com', 'proveedor', 'hash');
+
+INSERT INTO products (name, description, price, provider_id, stock_quantity) 
+VALUES ('Producto de Prueba', 'Una descripción corta', 99.99, 1, 50);
+EOF
+```
+
 // que lleva la navbar? 
 // debe llevar: index/explicacion, catalogo (main), login/register/profile, cart, checkout/pago, logout
 

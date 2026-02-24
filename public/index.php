@@ -28,35 +28,17 @@ session_start();
 // Initialize the Router
 $router = new Router();
 
-// La ruta /prueba se mapea al método index de la clase TestController
-// Con el fin de probar el router manual
-$router->get('/prueba', 'TestController@index');
+// Catálogo y Producto
+$router->get('/', 'ProductController@index');
+$router->get('/producto/{id}', 'ProductController@show');
 
-// La ruta /producto/{id} se mapea al método showProduct de la clase TestController
-// Con el fin de probar el router manual
-$router->get('/producto/{id}', 'TestController@showProduct');
+// Carrito
+$router->get('/carrito', 'CartController@showCart');
+$router->post('/carrito/agregar', 'CartController@add');
 
-// Se obtiene el método HTTP y la URI de la petición
-// URI = URL sin el protocolo y el host
+// URI dispatching
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Se muestra un mensaje de bienvenida y el estado de la base de datos
-echo "<h1>CartMonitorCart Engine Online</h1>";
-echo "<p>Running Front Controller</p>";
-
-try {
-    $db = Database::getInstance();
-    echo "<p style='color:green;'>Database Connected</p>";
-}
-catch (PDOException $e) {
-    echo "<p style='color:red;'>Database Connection Error: " . $e->getMessage() . "</p>";
-}
-
-// Nos aseguramos que la clase TestController exista para que el enrutamiento no genere un error 404
-if (!class_exists('App\Controllers\TestController')) {
-    echo "<pre>El siguiente paso es crear app\Controllers\TestController para probar el enrutamiento.</pre>";
-}
-else {
-    $router->dispatch($requestMethod, $requestUri);
-}
+// El ruteador se encarga de llamar al controlador correspondiente
+$router->dispatch($requestMethod, $requestUri);

@@ -15,7 +15,7 @@ docker stop cartmonitor_db # detener contenedor
 docker rm cartmonitor_app -f # eliminar contenedor
 docker rm cartmonitor_db -f # eliminar contenedor
 
-Accede en http://localhost:8080. 
+Accede en http://localhost:8081. 
 
 
 Servicios:
