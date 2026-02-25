@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\CartService;
+use App\Services\OrderService;
 
 /**
  * CartController maneja las operaciones del carrito
@@ -10,10 +11,12 @@ use App\Services\CartService;
 class CartController extends BaseController
 {
     private CartService $cartService;
+    private OrderService $orderService;
 
     public function __construct()
     {
         $this->cartService = new CartService();
+        $this->orderService = new OrderService();
     }
 
     /**
@@ -21,24 +24,36 @@ class CartController extends BaseController
      */
     public function showCart()
     {
-        // En el Sprint 2 usamos un ID de usuario mock (Ej: 1)
-        // Ya que el sistema de login es del Sprint 3
-        $userId = 1;
-
-        $cartData = $this->cartService->getCartTotals($userId);
-
-        echo "<h1>Tu Carrito de Compras</h1>";
-        if (empty($cartData['items'])) {
-            echo "<p>El carrito está vacío.</p>";
+        // En el Sprint 3 usamos el ID de sesión si existe, o pedimos login
+        \App\Core\SessionManager::start();
+        if (empty($_SESSION['user_id'])) {
+            \App\Core\SessionManager::setFlash('error', 'Debes iniciar sesión para ver tu carrito.');
+            header("Location: /login");
+            exit;
         }
-        else {
-            foreach ($cartData['items'] as $item) {
-                $name = $this->escape($item['name']);
-                echo "<div>{$name} x {$item['quantity']} - \${$item['item_total']}</div>";
-            }
-            echo "<h3>Total: \${$cartData['total']}</h3>";
+
+        $userId = $_SESSION['user_id'];
+
+        $cartDataRaw = $this->cartService->getCartTotals($userId);
+
+        // Zero Raw Data
+        $cartData = ['items' => [], 'total' => $this->escape($cartDataRaw['total'])];
+        foreach ($cartDataRaw['items'] as $item) {
+            $i = [];
+            $i['product_id'] = $item['product_id'];
+            $i['stock_quantity'] = $item['stock_quantity'];
+            $i['name'] = $this->escape($item['name']);
+            $i['price'] = $this->escape($item['price']);
+            $i['quantity'] = $this->escape($item['quantity']);
+            $i['item_total'] = $this->escape($item['item_total']);
+            $cartData['items'][] = $i;
         }
-        echo "<a href='/'>Continuar comprando</a>";
+
+        $csrf_token = \App\Core\SessionManager::generateCsrfToken();
+        $success = \App\Core\SessionManager::getFlash('success');
+        $error = \App\Core\SessionManager::getFlash('error');
+
+        require_once __DIR__ . '/../../resources/views/cart/index.php';
     }
 
     /**
@@ -46,24 +61,129 @@ class CartController extends BaseController
      */
     public function add()
     {
-        // Mock de usuario
-        $userId = 1;
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->jsonResponse(['success' => false, 'message' => 'Método no permitido'], 405);
+        \App\Core\SessionManager::start();
+        if (empty($_SESSION['user_id'])) {
+            \App\Core\SessionManager::setFlash('error', 'Debes iniciar sesión para agregar productos.');
+            header("Location: /login");
+            exit;
         }
 
-        // Validación de datos crudos
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("HTTP/1.0 405 Method Not Allowed");
+            exit;
+        }
+
+        // Validación de CSRF Token obligatoria
+        if (!\App\Core\SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die("Error de seguridad: Token CSRF inválido.");
+        }
+
+        $userId = $_SESSION['user_id'];
         $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $qty = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
 
         $result = $this->cartService->addToCart($userId, $productId, $qty);
 
         if ($result['success']) {
-            $this->jsonResponse($result);
+            \App\Core\SessionManager::setFlash('success', 'Producto agregado correctamente.');
+            header("Location: /carrito");
         }
         else {
-            $this->jsonResponse($result, 400);
+            \App\Core\SessionManager::setFlash('error', $result['message']);
+            header("Location: /producto/" . $productId);
         }
+        exit;
+    }
+
+    /**
+     * Actualiza la cantidad de un producto
+     */
+    public function update()
+    {
+        \App\Core\SessionManager::start();
+        if (empty($_SESSION['user_id'])) {
+            header("Location: /login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !\App\Core\SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die("Error de seguridad");
+        }
+
+        $userId = $_SESSION['user_id'];
+        $productId = (int)($_POST['product_id'] ?? 0);
+        $qty = (int)($_POST['quantity'] ?? 0);
+
+        $result = $this->cartService->updateCartItem($userId, $productId, $qty);
+
+        if ($result['success']) {
+            \App\Core\SessionManager::setFlash('success', $result['message']);
+        }
+        else {
+            \App\Core\SessionManager::setFlash('error', $result['message']);
+        }
+
+        header("Location: /carrito");
+        exit;
+    }
+
+    /**
+     * Elimina un producto del carrito
+     */
+    public function remove()
+    {
+        \App\Core\SessionManager::start();
+        if (empty($_SESSION['user_id'])) {
+            header("Location: /login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !\App\Core\SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die("Error de seguridad");
+        }
+
+        $userId = $_SESSION['user_id'];
+        $productId = (int)($_POST['product_id'] ?? 0);
+
+        $result = $this->cartService->removeCartItem($userId, $productId);
+
+        if ($result['success']) {
+            \App\Core\SessionManager::setFlash('success', $result['message']);
+        }
+        else {
+            \App\Core\SessionManager::setFlash('error', $result['message']);
+        }
+
+        header("Location: /carrito");
+        exit;
+    }
+
+    /**
+     * Procesa la compra del carrito actual
+     */
+    public function checkout()
+    {
+        \App\Core\SessionManager::start();
+        if (empty($_SESSION['user_id'])) {
+            header("Location: /login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !\App\Core\SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die("Error de seguridad");
+        }
+
+        $userId = $_SESSION['user_id'];
+        $result = $this->orderService->checkout($userId);
+
+        if ($result['success']) {
+            \App\Core\SessionManager::setFlash('success', $result['message']);
+            header("Location: /mis-ordenes");
+        }
+        else {
+            \App\Core\SessionManager::setFlash('error', $result['message']);
+            header("Location: /carrito");
+        }
+        exit;
     }
 }

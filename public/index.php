@@ -28,13 +28,8 @@ session_start();
 // Initialize the Router
 $router = new Router();
 
-// Catálogo y Producto
-$router->get('/', 'ProductController@index');
-$router->get('/producto/{id}', 'ProductController@show');
-
-// Carrito
-$router->get('/carrito', 'CartController@showCart');
-$router->post('/carrito/agregar', 'CartController@add');
+// Cargar todas las rutas de la aplicación
+require_once __DIR__ . '/../app/Routes/web.php';
 
 // URI dispatching
 $requestMethod = $_SERVER['REQUEST_METHOD'];

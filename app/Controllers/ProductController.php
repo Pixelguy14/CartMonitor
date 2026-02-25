@@ -17,20 +17,30 @@ class ProductController extends BaseController
     }
 
     /**
-     * Muestra el catálogo completo
+     * Muestra el catálogo principal con filtros opcionales
      */
     public function index()
     {
-        $products = $this->productService->listAllProducts();
+        $q = isset($_GET['q']) ? trim($_GET['q']) : null;
+        $minPrice = isset($_GET['min_price']) && is_numeric($_GET['min_price']) ? (float)$_GET['min_price'] : null;
+        $maxPrice = isset($_GET['max_price']) && is_numeric($_GET['max_price']) ? (float)$_GET['max_price'] : null;
 
-        // En una implementación real, aquí cargaríamos una view
-        // Por ahora para el Sprint 2, mostramos datos escapados
-        echo "<h1>Catálogo de Productos</h1>";
-        foreach ($products as $p) {
-            $name = $this->escape($p['name']);
-            $price = $this->escape($p['price']);
-            echo "<div><strong>{$name}</strong> - \${$price} <a href='/producto/{$p['id']}'>Ver detalle</a></div>";
+        $productsRaw = $this->productService->listAllProducts($q, $minPrice, $maxPrice);
+
+        // Zero Raw Data: Escapamos todos los productos
+        $products = [];
+        foreach ($productsRaw as $p) {
+            $p['name'] = $this->escape($p['name']);
+            $p['description'] = $this->escape($p['description']);
+            $p['price'] = $this->escape($p['price']);
+            $products[] = $p;
         }
+
+        $searchQuery = $this->escape($q ?? '');
+        $searchMin = $this->escape((string)$minPrice ?? '');
+        $searchMax = $this->escape((string)$maxPrice ?? '');
+
+        require_once __DIR__ . '/../../resources/views/catalog/index.php';
     }
 
     /**
@@ -38,23 +48,22 @@ class ProductController extends BaseController
      */
     public function show($id)
     {
-        $product = $this->productService->getProductById((int)$id);
+        $productRaw = $this->productService->getProductById((int)$id);
 
-        if (!$product) {
+        if (!$productRaw) {
             header("HTTP/1.0 404 Not Found");
             echo "<h1>Producto no encontrado</h1>";
             return;
         }
 
-        $name = $this->escape($product['name']);
-        $desc = $this->escape($product['description']);
-        $price = $this->escape($product['price']);
-        $stock = $this->escape($product['stock_quantity']);
+        // Zero Raw Data
+        $p = [];
+        $p['id'] = $this->escape($productRaw['id']);
+        $p['name'] = $this->escape($productRaw['name']);
+        $p['description'] = $this->escape($productRaw['description']);
+        $p['price'] = $this->escape($productRaw['price']);
+        $p['stock_quantity'] = $this->escape($productRaw['stock_quantity']);
 
-        echo "<h1>Detalle de: {$name}</h1>";
-        echo "<p>{$desc}</p>";
-        echo "<p>Precio: \${$price}</p>";
-        echo "<p>Stock disponible: {$stock}</p>";
-        echo "<a href='/'>Regresar al catálogo</a>";
+        require_once __DIR__ . '/../../resources/views/catalog/show.php';
     }
 }

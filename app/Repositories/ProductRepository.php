@@ -32,12 +32,32 @@ class ProductRepository extends BaseRepository
     }
 
     /**
-     * Busca productos por nombre (Búsqueda dinámica)
+     * Búsqueda avanzada con filtros opcionales (Zero SQLi)
      */
-    public function findByName(string $name): array
+    public function advancedSearch(?string $q, ?float $minPrice, ?float $maxPrice): array
     {
-        $stmt = $this->db->prepare("SELECT * FROM products WHERE name LIKE :name");
-        $stmt->execute(['name' => "%$name%"]);
+        $sql = "SELECT * FROM products WHERE 1=1";
+        $params = [];
+
+        if (!empty($q)) {
+            $sql .= " AND name LIKE :q";
+            $params['q'] = '%' . $q . '%';
+        }
+
+        if ($minPrice !== null && $minPrice > 0) {
+            $sql .= " AND price >= :min_price";
+            $params['min_price'] = $minPrice;
+        }
+
+        if ($maxPrice !== null && $maxPrice > 0) {
+            $sql .= " AND price <= :max_price";
+            $params['max_price'] = $maxPrice;
+        }
+
+        $sql .= " ORDER BY created_at DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

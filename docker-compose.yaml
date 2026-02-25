@@ -33,7 +33,7 @@ services:
       - "3307:3306" # Mapeo externo 3307 para no chocar con MySQLs locales
     volumes:
       - cartmonitor_db_data:/var/lib/mysql
-      - ./cartmonitor.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/cartmonitor.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - cartmonitor-network
 

@@ -69,7 +69,7 @@ y docker compose para orquestar todo.
 dbdiagram.io fue usado para generar el diagrama entidad relacion de la base de datos.
 ![Diagrama de Entidad Relacion](/public/images/Diagrama_entidad_relacion.png)
 
-¿Cómo insertamos datos de prueba al docker?
+¿Cómo insertamos datos de prueba al docker? (SOlo reelevante en Sprint 1-2)
 ```bash
 docker exec -i cartmonitor_db mysql -u CartMonitor_user -pCartMonitor_password CartMonitor <<EOF
 INSERT INTO users (username, email, type, password_hash) 
@@ -80,12 +80,19 @@ VALUES ('Producto de Prueba', 'Una descripción corta', 99.99, 1, 50);
 EOF
 ```
 
-// que lleva la navbar? 
-// debe llevar: index/explicacion, catalogo (main), login/register/profile, cart, checkout/pago, logout
+Una vez creado el usuario test test@test.com 1234, ocupamos hacerlo admin, lo haremos mediante una inyeccion SQL para ascenderlo a admin y pueda ascender a usuarios a proveedores.
 
-// Vista de detalle de producto en UI solo aumenta el tamaño del div, la imagen, y muestra la descripcion, la cantidad del stock, y cuanto fue creado. El precio y el nombre se ven desde la vista de catalogo (Dejar diseño front al final)
+```bash
+docker exec -i cartmonitor_db mysql -u CartMonitor_user -pCartMonitor_password CartMonitor <<EOF
+UPDATE users SET type = 'admin' WHERE email = 'test@test.com';
+EOF
+```
 
-// No olvidar Front Controller architecture (Front Controller en public/index.php), router manual y MCV parcial con capas adicionales
+Si lo hiciste con la sesion iniciada, simplemente haz logout y inicia de nuevo para ver los privilegios de admin
 
-// no es mejor cambiar el docker a nginx? 
 
+Orden de la arquitectura:
+Routes -> Controllers -> Services -> Repositories -> Database
+
+Orden de creacion:
+Database -> Repositories -> Services -> Controllers -> Routes -> Views

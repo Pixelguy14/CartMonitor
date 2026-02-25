@@ -2,39 +2,41 @@
 
 namespace App\Middlewares;
 
-use App\Repositories\UserRepository;
+use App\Core\Database;
+use App\Core\SessionManager;
 
 /**
- * AuthMiddleware intercepta peticiones para validar la sesión del usuario
- * Según el diagrama de secuencia Validacion_sesion.png
+ * AuthMiddleware valida que el usuario esté logueado
  */
 class AuthMiddleware
 {
-    private UserRepository $userRepository;
-
-    public function __construct()
-    {
-        $this->userRepository = new UserRepository();
-    }
-
     /**
      * Verifica si hay una sesión activa válida
      */
-    public function handle(): ?array
+    public function handle(): bool
     {
-        if (!isset($_SESSION['user_token'])) {
-            return null;
+        SessionManager::start();
+
+        if (!isset($_SESSION['user_token']) || !isset($_SESSION['user_id'])) {
+            SessionManager::setFlash('error', 'Debes iniciar sesión para acceder.');
+            header('Location: /login');
+            return false;
         }
 
-        $tokenHash = $_SESSION['user_token'];
+        // Validación extra contra DB para mayor seguridad
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT id FROM user_sessions WHERE token_hash = :hash AND user_id = :uid AND expires_at > NOW()");
+        $stmt->execute([
+            'hash' => $_SESSION['user_token'],
+            'uid' => $_SESSION['user_id']
+        ]);
 
-        // En una implementación real buscaríamos en la tabla user_sessions
-        // Por ahora retornamos un mock si existe el token en la sesión
-        // El Sprint 3 completará la lógica de login real
-        return [
-            'id' => 1,
-            'username' => 'usuario_prueba',
-            'type' => 'usuario'
-        ];
+        if (!$stmt->fetch()) {
+            SessionManager::destroy();
+            header('Location: /login');
+            return false;
+        }
+
+        return true;
     }
 }

@@ -17,11 +17,11 @@ class ProductService extends BaseService
     }
 
     /**
-     * Obtiene todos los productos
+     * Obtiene los productos, opcionalmente filtrados
      */
-    public function listAllProducts(): array
+    public function listAllProducts(?string $q = null, ?float $minPrice = null, ?float $maxPrice = null): array
     {
-        return $this->productRepository->getAll();
+        return $this->productRepository->advancedSearch($q, $minPrice, $maxPrice);
     }
 
     /**

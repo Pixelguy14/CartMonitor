@@ -15,6 +15,9 @@ docker stop cartmonitor_db # detener contenedor
 docker rm cartmonitor_app -f # eliminar contenedor
 docker rm cartmonitor_db -f # eliminar contenedor
 
+docker compose down -v # Para borrar los contenedores y el volumen de datos viejo.
+docker compose up -d # Para iniciar todo de nuevo y que MySQL ejecute el init.sql.
+
 Accede en http://localhost:8081. 
 
 

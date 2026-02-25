@@ -46,6 +46,15 @@ class CartRepository extends BaseRepository
     }
 
     /**
+     * Actualiza la cantidad exacta de un ítem en el carrito
+     */
+    public function updateQuantity(int $userId, int $productId, int $quantity): bool
+    {
+        $stmt = $this->db->prepare("UPDATE cart_items SET quantity = :q WHERE user_id = :u AND product_id = :p");
+        return $stmt->execute(['u' => $userId, 'p' => $productId, 'q' => $quantity]);
+    }
+
+    /**
      * Elimina un ítem del carrito
      */
     public function removeItem(int $userId, int $productId): bool

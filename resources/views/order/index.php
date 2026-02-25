@@ -1,0 +1,61 @@
+<?php ob_start(); ?>
+
+<h2 class="mb-4">Historial de Compras</h2>
+
+<?php if (!empty($success)): ?>
+<div class="alert alert-success">
+    <?= $success?>
+</div>
+<?php
+endif; ?>
+
+<?php if (!empty($error)): ?>
+<div class="alert alert-danger">
+    <?= $error?>
+</div>
+<?php
+endif; ?>
+
+<?php if (empty($orders)): ?>
+<div class="alert alert-info">Aún no has realizado ninguna compra. <a href="/" class="alert-link">Ver el catálogo</a>
+</div>
+<?php
+else: ?>
+<div class="row">
+    <?php foreach ($orders as $order): ?>
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Orden #
+                    <?= str_pad($order['id'], 6, '0', STR_PAD_LEFT)?>
+                </span>
+                <span class="text-muted"><small>Realizada el:
+                        <?= date('d/m/Y H:i', strtotime($order['created_at']))?>
+                    </small></span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-success fs-6">Pagado (Completada)</span>
+                    <h4 class="mb-0 text-success fw-bold">Total: $
+                        <?= number_format((float)$order['total_amount'], 2)?>
+                    </h4>
+                </div>
+
+                <p class="mb-0 text-muted">
+                    <em>Los detalles de los productos para esta orden se generan vía API o en otra vista en una versión
+                        futura.</em><br>
+                    Has completado la compra exitosamente y se descontó el stock.
+                </p>
+            </div>
+        </div>
+    </div>
+    <?php
+    endforeach; ?>
+</div>
+<?php
+endif; ?>
+
+<?php
+$content = ob_get_clean();
+require_once __DIR__ . '/../layout/master.php';
+?>
