@@ -33,6 +33,7 @@ class ProductController extends BaseController
             $p['name'] = $this->escape($p['name']);
             $p['description'] = $this->escape($p['description']);
             $p['price'] = $this->escape($p['price']);
+            $p['image_url'] = $this->escape($p['image_url'] ?? '');
             $products[] = $p;
         }
 
@@ -63,6 +64,7 @@ class ProductController extends BaseController
         $p['description'] = $this->escape($productRaw['description']);
         $p['price'] = $this->escape($productRaw['price']);
         $p['stock_quantity'] = $this->escape($productRaw['stock_quantity']);
+        $p['image_url'] = $this->escape($productRaw['image_url'] ?? '');
 
         require_once __DIR__ . '/../../resources/views/catalog/show.php';
     }

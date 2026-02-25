@@ -16,6 +16,7 @@ endif; ?>
 <?php
 endif; ?>
 
+<!-- Lista de usuarios existentes -->
 <div class="table-responsive">
     <table class="table table-striped table-hover bg-white shadow-sm rounded">
         <thead class="table-dark">
@@ -51,10 +52,10 @@ endif; ?>
                         <input type="hidden" name="csrf_token" value="<?= $csrf_token?>">
                         <input type="hidden" name="user_id" value="<?= $user['id']?>">
                         <select name="type" class="form-select form-select-sm" style="width: auto;">
-                            <option value="usuario" <?= $user['type'] === 'usuario' ? 'selected' : '' ?>>Usuario</option>
-                            <option value="proveedor" <?= $user['type'] === 'proveedor' ? 'selected' : '' ?>>Proveedor
+                            <option value="usuario" <?=$user['type']==='usuario' ? 'selected' : ''?>>Usuario</option>
+                            <option value="proveedor" <?=$user['type']==='proveedor' ? 'selected' : ''?>>Proveedor
                             </option>
-                            <option value="admin" <?= $user['type'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                            <option value="admin" <?=$user['type']==='admin' ? 'selected' : ''?>>Admin</option>
                         </select>
                         <button type="submit" class="btn btn-primary btn-sm">Actualizar</button>
                     </form>

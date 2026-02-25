@@ -25,6 +25,11 @@ $router->group(['middleware' => [\App\Middlewares\AuthMiddleware::class]], funct
     $router->post('/carrito/eliminar', 'CartController@remove');
     $router->post('/carrito/checkout', 'CartController@checkout');
     $router->get('/mis-ordenes', 'OrderController@index');
+
+    // Perfil
+    $router->get('/perfil', 'ProfileController@index');
+    $router->post('/perfil/editar', 'ProfileController@update');
+    $router->post('/perfil/eliminar', 'ProfileController@delete');
 });
 
 // Admin (Rutas protegidas que requieren autenticarse como admin)
@@ -40,5 +45,7 @@ $router->group(['prefix' => '/admin', 'middleware' => [\App\Middlewares\AdminMid
 $router->group(['prefix' => '/proveedor', 'middleware' => [\App\Middlewares\ProviderMiddleware::class]], function ($router) {
     $router->get('/productos', 'ProviderController@index');
     $router->post('/productos/agregar', 'ProviderController@store');
+    $router->get('/productos/{id}/editar', 'ProviderController@edit');
+    $router->post('/productos/{id}/editar', 'ProviderController@update');
     $router->post('/productos/eliminar', 'ProviderController@delete');
 });

@@ -40,6 +40,18 @@ class OrderController extends BaseController
             foreach ($o as $key => $val) {
                 $order[$key] = $this->escape($val ?? '');
             }
+
+            // Traer items de la orden
+            $itemsRaw = $this->orderService->getOrderItems($order['id'], $userId);
+            $order['items'] = [];
+            foreach ($itemsRaw as $item) {
+                $i = [];
+                foreach ($item as $k => $v) {
+                    $i[$k] = $this->escape($v ?? '');
+                }
+                $order['items'][] = $i;
+            }
+
             $orders[] = $order;
         }
 

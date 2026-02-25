@@ -42,6 +42,17 @@ else: ?>
     <?php foreach ($products as $p): ?>
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm">
+            <?php if (!empty($p['image_url'])): ?>
+            <img src="<?= $p['image_url']?>" class="card-img-top" alt="<?= $p['name']?>"
+                style="height: 200px; object-fit: cover;">
+            <?php
+        else: ?>
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
+                style="height: 200px;">
+                <span>Sin imagen</span>
+            </div>
+            <?php
+        endif; ?>
             <div class="card-body">
                 <h5 class="card-title">
                     <?= $p['name']?>

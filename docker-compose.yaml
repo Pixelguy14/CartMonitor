@@ -29,6 +29,7 @@ services:
       MYSQL_USER: CartMonitor_user
       MYSQL_PASSWORD: CartMonitor_password
       MYSQL_ROOT_PASSWORD: root_password
+      TZ: America/Mexico_City # importante para que la fecha sea correcta
     ports:
       - "3307:3306" # Mapeo externo 3307 para no chocar con MySQLs locales
     volumes:

@@ -27,9 +27,11 @@
                             <button class="btn btn-sm btn-outline-light" type="submit">Buscar</button>
                         </form>
                     </li>
+                    <!--
                     <li class="nav-item">
                         <a class="nav-link" href="/">Catálogo</a>
                     </li>
+                    -->
                 </ul>
                 <ul class="navbar-nav">
                     <?php if (isset($_SESSION['user_id'])): ?>
@@ -57,6 +59,9 @@
                         <span class="nav-link text-light">Hola,
                             <?= htmlspecialchars($_SESSION['username'] ?? '', ENT_QUOTES, 'UTF-8')?>
                         </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-info" href="/perfil">Mi Perfil</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-danger" href="/logout">Salir</a>

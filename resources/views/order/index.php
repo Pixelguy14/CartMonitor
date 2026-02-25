@@ -41,11 +41,37 @@ else: ?>
                     </h4>
                 </div>
 
-                <p class="mb-0 text-muted">
-                    <em>Los detalles de los productos para esta orden se generan vía API o en otra vista en una versión
-                        futura.</em><br>
-                    Has completado la compra exitosamente y se descontó el stock.
-                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless align-middle mb-0">
+                        <thead class="text-muted border-bottom">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio (al comprar)</th>
+                                <th>Cantidad</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($order['items'] as $item): ?>
+                            <tr>
+                                <td>
+                                    <?= $item['name']?>
+                                </td>
+                                <td>$
+                                    <?= number_format((float)$item['price_at_purchase'], 2)?>
+                                </td>
+                                <td>x
+                                    <?= $item['quantity']?>
+                                </td>
+                                <td class="text-end fw-bold">$
+                                    <?= number_format(((float)$item['price_at_purchase'] * (int)$item['quantity']), 2)?>
+                                </td>
+                            </tr>
+                            <?php
+        endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

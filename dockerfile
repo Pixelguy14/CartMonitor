@@ -15,3 +15,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 WORKDIR /var/www/html
+
+# Asegurar permisos y crear enlace simbólico para que storage sea accesible desde public
+RUN mkdir -p /var/www/html/storage/images && \
+    ln -s /var/www/html/storage /var/www/html/public/storage && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 775 /var/www/html

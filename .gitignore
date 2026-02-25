@@ -5,3 +5,9 @@ presentacion_borrador.txt
 public/test.html
 public/test2.html
 public/test3.html
+# Almacenamiento (Imágenes subidas)
+storage/images/*
+!storage/images/.gitkeep
+
+# Enlace simbólico
+public/storage

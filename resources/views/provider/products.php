@@ -24,7 +24,7 @@ endif; ?>
                 <h5 class="card-title mb-0">Agregar Producto</h5>
             </div>
             <div class="card-body">
-                <form action="/proveedor/productos/agregar" method="POST">
+                <form action="/proveedor/productos/agregar" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?= $csrf_token?>">
 
                     <div class="mb-3">
@@ -48,6 +48,11 @@ endif; ?>
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Imagen</label>
+                        <input type="file" class="form-control" name="image" accept="image/*">
+                    </div>
+
                     <button type="submit" class="btn btn-success w-100">Guardar Producto</button>
                 </form>
             </div>
@@ -63,16 +68,17 @@ endif; ?>
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
+                                <th>Imagen</th>
                                 <th>Nombre</th>
-                                <th>Precio</th>
                                 <th>Stock</th>
-                                <th>Acción</th>
+                                <th>Creado el</th>
+                                <th>Gestión</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($products)): ?>
                             <tr>
-                                <td colspan="5" class="text-center">No tienes productos enlistados.</td>
+                                <td colspan="6" class="text-center">No tienes productos enlistados.</td>
                             </tr>
                             <?php
 else: ?>
@@ -82,10 +88,22 @@ else: ?>
                                     <?= $product['id']?>
                                 </td>
                                 <td>
-                                    <?= $product['name']?>
+                                    <?php if (!empty($product['image_url'])): ?>
+                                    <img src="<?= $product['image_url']?>" alt="Imagen"
+                                        style="max-height: 40px; border-radius: 4px;">
+                                    <?php
+        else: ?>
+                                    <span class="text-muted"><small>Sin imagen</small></span>
+                                    <?php
+        endif; ?>
                                 </td>
-                                <td>$
-                                    <?= $product['price']?>
+                                <td>
+                                    <strong>
+                                        <?= $product['name']?>
+                                    </strong><br>
+                                    <small class="text-success">$
+                                        <?= $product['price']?>
+                                    </small>
                                 </td>
                                 <td>
                                     <span
@@ -94,12 +112,21 @@ else: ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <form action="/proveedor/productos/eliminar" method="POST"
-                                        onsubmit="return confirm('¿Eliminar este producto?');">
-                                        <input type="hidden" name="csrf_token" value="<?= $csrf_token?>">
-                                        <input type="hidden" name="product_id" value="<?= $product['id']?>">
-                                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                                    </form>
+                                    <small>
+                                        <?= date('d/m/Y', strtotime($product['created_at']))?>
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="/proveedor/productos/<?= $product['id']?>/editar"
+                                            class="btn btn-warning btn-sm">Editar</a>
+                                        <form action="/proveedor/productos/eliminar" method="POST"
+                                            onsubmit="return confirm('¿Estás seguro que deseas eliminar este producto? Esta accion es irreversible.');">
+                                            <input type="hidden" name="csrf_token" value="<?= $csrf_token?>">
+                                            <input type="hidden" name="product_id" value="<?= $product['id']?>">
+                                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <?php

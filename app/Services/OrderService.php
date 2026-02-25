@@ -88,4 +88,9 @@ class OrderService extends BaseService
     {
         return $this->orderRepository->getOrdersByUser($userId);
     }
+
+    public function getOrderItems(int $orderId, int $userId): array
+    {
+        return $this->orderRepository->getOrderItems($orderId, $userId);
+    }
 }

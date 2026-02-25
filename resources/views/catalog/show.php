@@ -5,7 +5,20 @@ ob_start();
 ?>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-5">
+        <?php if (!empty($p['image_url'])): ?>
+        <img src="<?= $p['image_url']?>" class="img-fluid rounded shadow-sm" alt="<?= $p['name']?>"
+            style="max-height: 500px; width: auto; display: block; margin: 0 auto;">
+        <?php
+else: ?>
+        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded shadow-sm"
+            style="height: 400px;">
+            <span>Sin imagen disponible</span>
+        </div>
+        <?php
+endif; ?>
+    </div>
+    <div class="col-md-7">
         <h2>
             <?= $p['name']?>
         </h2>
