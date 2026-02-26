@@ -2,9 +2,9 @@
 
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card shadow-sm mt-5">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
+        <div class="glass-panel mt-5">
+            <div>
+                <span class="label-sys text-center w-100 d-block mb-4">SYSTEM_LOGIN</span>
 
                 <?php if (!empty($error)): ?>
                 <div class="alert alert-danger">
@@ -26,18 +26,19 @@ endif; ?>
                         value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8')?>">
 
                     <div class="mb-3">
-                        <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <label for="email" class="form-label font-monospace small fw-bold">CORREO ELECTRÓNICO</label>
+                        <input type="email" class="form-control glass-input" id="email" name="email" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="form-label font-monospace small fw-bold">CONTRASEÑA</label>
+                        <input type="password" class="form-control glass-input" id="password" name="password" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-                    <p class="mt-3 text-center text-muted"><small>¿No tienes cuenta? <a href="/register">Regístrate
-                                aquí</a></small></p>
+                    <button type="submit" class="btn btn-hard btn-primary w-100 mb-3">INGRESAR</button>
+                    <p class="mt-3 text-center text-muted font-monospace"><small>¿NO TIENES CUENTA? <a href="/register"
+                                class="fw-bold">REGÍSTRATE
+                                AQUÍ</a></small></p>
                 </form>
             </div>
         </div>

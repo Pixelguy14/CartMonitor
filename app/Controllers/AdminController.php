@@ -1,21 +1,22 @@
 <?php
-
 namespace App\Controllers;
 
-use App\Repositories\UserRepository;
+use App\Services\AdminService;
 use App\Core\SessionManager;
-use App\Core\Database;
+use Exception;
+
 
 /**
  * AdminController maneja la gestión de usuarios por parte de administradores
  */
 class AdminController extends BaseController
 {
-    private UserRepository $userRepository;
+    private AdminService $service;
 
     public function __construct()
     {
-        $this->userRepository = new UserRepository();
+        // Inyectamos la dependencia del repositorio
+        $this->service = new AdminService(new \App\Repositories\AdminRepository());
     }
 
     /**
@@ -23,16 +24,13 @@ class AdminController extends BaseController
      */
     public function index()
     {
-        $db = Database::getInstance();
-        $stmt = $db->query("SELECT id, username, email, type, created_at FROM users ORDER BY created_at DESC");
-        $usersRaw = $stmt->fetchAll();
+        $rawUsers = $this->service->listUsers();
 
-        // Escapar datos para Zero Raw Data
         $users = [];
-        foreach ($usersRaw as $user) {
+        foreach ($rawUsers as $user) {
             $u = [];
-            foreach ($user as $key => $value) {
-                $u[$key] = $this->escape($value);
+            foreach ($user as $k => $v) {
+                $u[$k] = $this->escape($v ?? '');
             }
             $users[] = $u;
         }
@@ -49,31 +47,19 @@ class AdminController extends BaseController
      */
     public function updateRole()
     {
-        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
-            die("Error de seguridad");
-        }
+        $this->validateCsrf();
 
         $userId = (int)($_POST['user_id'] ?? 0);
         $newType = $_POST['type'] ?? 'usuario';
 
-        if (!in_array($newType, ['usuario', 'proveedor', 'admin'])) {
-            SessionManager::setFlash('error', 'Rol inválido');
-            header('Location: /admin/usuarios');
-            exit;
+        try {
+            $this->service->changeRole($userId, $newType, (int)$_SESSION['user_id']);
+            SessionManager::setFlash('success', 'Rol de usuario actualizado.');
+        }
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
         }
 
-        // Evitar que un admin se quite el permiso a sí mismo (opcional pero seguro)
-        if ($userId === (int)$_SESSION['user_id'] && $newType !== 'admin') {
-            SessionManager::setFlash('error', 'No puedes quitarte el rol de admin a ti mismo.');
-            header('Location: /admin/usuarios');
-            exit;
-        }
-
-        $db = Database::getInstance();
-        $stmt = $db->prepare("UPDATE users SET type = :type WHERE id = :id");
-        $stmt->execute(['type' => $newType, 'id' => $userId]);
-
-        SessionManager::setFlash('success', 'Rol de usuario actualizado.');
         header('Location: /admin/usuarios');
         exit;
     }
@@ -83,13 +69,11 @@ class AdminController extends BaseController
      */
     public function edit(string $id)
     {
-        $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT id, username, email, type, phone FROM users WHERE id = :id");
-        $stmt->execute(['id' => $id]);
-        $userRaw = $stmt->fetch();
-
-        if (!$userRaw) {
-            SessionManager::setFlash('error', 'Usuario no encontrado');
+        try {
+            $userRaw = $this->service->getUserForEdit((int)$id);
+        }
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
             header('Location: /admin/usuarios');
             exit;
         }
@@ -110,41 +94,22 @@ class AdminController extends BaseController
      */
     public function update(string $id)
     {
-        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
-            die("Error de seguridad");
-        }
-
-        $username = trim($_POST['username'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        $db = Database::getInstance();
-
-        if (empty($password)) {
-            // Actualizar sin tocar la contraseña
-            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, phone = :phone WHERE id = :id");
-            $params = ['username' => $username, 'email' => $email, 'phone' => $phone, 'id' => $id];
-        }
-        else {
-            // Actualizar incluyendo nueva contraseña hasheada
-            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, phone = :phone, password_hash = :password_hash WHERE id = :id");
-            $params = [
-                'username' => $username,
-                'email' => $email,
-                'phone' => $phone,
-                'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-                'id' => $id
-            ];
-        }
-
+        $this->validateCsrf();
+        // Limpieza selectiva de datos de entrada
+        $input = [
+            'username' => trim($_POST['username'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'phone' => trim($_POST['phone'] ?? ''),
+            'password' => $_POST['password'] ?? ''
+        ];
         try {
-            $stmt->execute($params);
+            $this->service->updateUser((int)$id, $input);
             SessionManager::setFlash('success', 'Usuario actualizado correctamente.');
             header('Location: /admin/usuarios');
         }
-        catch (\PDOException $e) {
-            SessionManager::setFlash('error', 'Error al actualizar: ' . $e->getMessage());
+        catch (Exception $e) {
+            // En caso de error, el controlador sabe que debe volver al formulario de edición
+            SessionManager::setFlash('error', $e->getMessage());
             header('Location: /admin/usuarios/' . $id . '/editar');
         }
         exit;
@@ -155,45 +120,31 @@ class AdminController extends BaseController
      */
     public function delete()
     {
-        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
-            die("Error de seguridad");
-        }
+        $this->validateCsrf();
 
         $userId = (int)($_POST['user_id'] ?? 0);
 
-        if ($userId === (int)$_SESSION['user_id']) {
-            SessionManager::setFlash('error', 'No puedes eliminarte a ti mismo.');
-            header('Location: /admin/usuarios');
-            exit;
-        }
-
-        $db = Database::getInstance();
-
         try {
-            $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
-            $stmt->execute(['id' => $userId]);
-            SessionManager::setFlash('success', 'Usuario eliminado permanentemente.');
-        }
-        catch (\PDOException $e) {
-            // Manejar error de llave foránea (1451) si tiene productos en order_items
-            if ($e->getCode() == 23000) {
-
-                // Borrado Lógico: Reemplazar datos del proveedor para mantener el historial intacto
-                $stmt = $db->prepare("UPDATE users SET username = :anon, email = :anon_email, password_hash = 'deleted', type = 'usuario' WHERE id = :id");
-                $stmt->execute([
-                    'anon' => 'Usuario Eliminado (' . $userId . ')',
-                    'anon_email' => 'deleted_' . $userId . '@system.local',
-                    'id' => $userId
-                ]);
-
-                SessionManager::setFlash('success', 'El usuario tenía ventas asociadas. Su cuenta ha sido ofuscada y desactivada (Borrado Lógico) para preservar el historial de órdenes.');
+            $result = $this->service->deleteUser($userId, (int)$_SESSION['user_id']);
+            if ($result === 'success_deleted') {
+                SessionManager::setFlash('success', 'Usuario eliminado permanentemente.');
             }
             else {
-                SessionManager::setFlash('error', 'Error inesperado al eliminar: ' . $e->getMessage());
+                SessionManager::setFlash('success', 'Usuario tenía ventas; se ha desactivado lógicamente.');
             }
+        }
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
         }
 
         header('Location: /admin/usuarios');
         exit;
+    }
+
+    private function validateCsrf()
+    {
+        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die('Error de seguridad');
+        }
     }
 }

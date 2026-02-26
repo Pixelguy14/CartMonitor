@@ -2,14 +2,23 @@
 
 namespace App\Controllers;
 
+use App\Services\ProfileService;
+use App\Repositories\AdminRepository;
 use App\Core\SessionManager;
-use App\Core\Database;
+use Exception;
 
 /**
  * ProfileController maneja la cuenta de un usuario normal (editar/borrar su propia cuenta)
  */
 class ProfileController extends BaseController
 {
+    private ProfileService $service;
+
+    public function __construct()
+    {
+        $this->service = new ProfileService(new AdminRepository());
+    }
+
     /**
      * Muestra el formulario para editar el perfil del usuario activo
      */
@@ -22,27 +31,25 @@ class ProfileController extends BaseController
             exit;
         }
 
-        $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT id, username, email, phone FROM users WHERE id = :id");
-        $stmt->execute(['id' => $userId]);
-        $userRaw = $stmt->fetch();
+        try {
+            $userRaw = $this->service->getProfileData($userId);
 
-        if (!$userRaw) {
-            SessionManager::setFlash('error', 'Usuario no encontrado');
+            $user = [];
+            foreach ($userRaw as $key => $value) {
+                $user[$key] = $this->escape($value ?? '');
+            }
+
+            $csrf_token = SessionManager::generateCsrfToken();
+            $success = SessionManager::getFlash('success');
+            $error = SessionManager::getFlash('error');
+
+            require_once __DIR__ . '/../../resources/views/profile/index.php';
+        }
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
             header('Location: /');
             exit;
         }
-
-        $user = [];
-        foreach ($userRaw as $key => $value) {
-            $user[$key] = $this->escape($value ?? '');
-        }
-
-        $csrf_token = SessionManager::generateCsrfToken();
-        $success = SessionManager::getFlash('success');
-        $error = SessionManager::getFlash('error');
-
-        require_once __DIR__ . '/../../resources/views/profile/index.php';
     }
 
     /**
@@ -57,44 +64,25 @@ class ProfileController extends BaseController
             exit;
         }
 
-        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
-            die("Error de seguridad");
-        }
+        $this->validateCsrf();
 
-        $username = trim($_POST['username'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        $db = Database::getInstance();
-
-        if (empty($password)) {
-            // Actualizar sin tocar la contraseña
-            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, phone = :phone WHERE id = :id");
-            $params = ['username' => $username, 'email' => $email, 'phone' => $phone, 'id' => $userId];
-        }
-        else {
-            // Actualizar incluyendo nueva contraseña hasheada
-            $stmt = $db->prepare("UPDATE users SET username = :username, email = :email, phone = :phone, password_hash = :password_hash WHERE id = :id");
-            $params = [
-                'username' => $username,
-                'email' => $email,
-                'phone' => $phone,
-                'password_hash' => password_hash($password, PASSWORD_BCRYPT),
-                'id' => $userId
-            ];
-        }
+        $data = [
+            'username' => trim($_POST['username'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'phone' => trim($_POST['phone'] ?? ''),
+            'password' => $_POST['password'] ?? ''
+        ];
 
         try {
-            $stmt->execute($params);
+            $this->service->updateProfile($userId, $data);
 
             // Actualizar el username en la sesión
-            $_SESSION['username'] = $username;
+            $_SESSION['username'] = $data['username'];
 
             SessionManager::setFlash('success', 'Perfil actualizado correctamente.');
         }
-        catch (\PDOException $e) {
-            SessionManager::setFlash('error', 'Error al actualizar: El correo o username ya están en uso.');
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
         }
 
         header('Location: /perfil');
@@ -113,46 +101,36 @@ class ProfileController extends BaseController
             exit;
         }
 
-        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
-            die("Error de seguridad");
-        }
-
-        $db = Database::getInstance();
+        $this->validateCsrf();
 
         try {
-            $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
-            $stmt->execute(['id' => $userId]);
+            $result = $this->service->deleteAccount($userId);
 
             // Al eliminar, destruir la sesion
             SessionManager::destroy();
             SessionManager::start(); // Start new session to flash message
-            SessionManager::setFlash('success', 'Tu cuenta ha sido eliminada permanentemente.');
+
+            if ($result === 'success_deleted') {
+                SessionManager::setFlash('success', 'Tu cuenta ha sido eliminada permanentemente.');
+            }
+            else {
+                SessionManager::setFlash('success', 'Tu cuenta ha sido eliminada y tus datos anonimizados para preservar el historial de órdenes.');
+            }
+
             header('Location: /');
             exit;
         }
-        catch (\PDOException $e) {
-            // Manejar error de llave foránea (1451) si tiene productos en order_items o si es un proveedor que ha vendido logic deletes
-            if ($e->getCode() == 23000) {
-                // Borrado Lógico: Reemplazar datos para mantener el historial intacto
-                $stmt = $db->prepare("UPDATE users SET username = :anon, email = :anon_email, password_hash = 'deleted', type = 'usuario' WHERE id = :id");
-                $stmt->execute([
-                    'anon' => 'Cuenta Eliminada (' . $userId . ')',
-                    'anon_email' => 'deleted_' . $userId . '@system.local',
-                    'id' => $userId
-                ]);
+        catch (Exception $e) {
+            SessionManager::setFlash('error', $e->getMessage());
+            header('Location: /perfil');
+            exit;
+        }
+    }
 
-                // Destroy session since they deleted their account
-                SessionManager::destroy();
-                SessionManager::start();
-                SessionManager::setFlash('success', 'Tu cuenta ha sido eliminada y tus datos anonimizados para preservar el historial de órdenes.');
-                header('Location: /');
-                exit;
-            }
-            else {
-                SessionManager::setFlash('error', 'Error inesperado al eliminar la cuenta.');
-                header('Location: /perfil');
-                exit;
-            }
+    private function validateCsrf()
+    {
+        if (!SessionManager::validateCsrfToken($_POST['csrf_token'] ?? null)) {
+            die("Error de seguridad");
         }
     }
 }

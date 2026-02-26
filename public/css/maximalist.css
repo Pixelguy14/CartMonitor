@@ -1,0 +1,228 @@
+/* public/css/maximalist.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    /* Palettes */
+    --cobalt: #2E5BFF;
+    --sun: #FFD700;
+    --lime: #CCFF00;
+    --bg-white: #F4F4F4;
+    
+    /* The Ghost (Desaturated for deep work) */
+    --ghost-ash: #E0E0E0;
+    --ghost-bone: #F5F5F0;
+    --ghost-clay: #D0D0C8;
+
+    /* Base Colors & Glass */
+    --glass-light: rgba(255, 255, 255, 0.85);
+    --glass-dark: rgba(10, 10, 10, 0.8);
+    --text-primary: #000000;
+    --border-color: #000000;
+    
+    /* Shadows */
+    --block-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
+    --block-shadow-sm: 2px 2px 0px rgba(0, 0, 0, 1);
+}
+
+body {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: var(--bg-white);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+    font-family: 'Michroma', sans-serif;
+    text-transform: uppercase;
+}
+
+/* Global Reset for Technical Maximalism */
+* {
+    border-radius: 0 !important;
+}
+
+/* Base Glass Containers */
+.glass-panel {
+    background: var(--glass-light);
+    border: 2px solid var(--border-color);
+    padding: 20px;
+    box-shadow: var(--block-shadow);
+    backdrop-filter: blur(10px);
+}
+
+.glass-panel-dark {
+    background: var(--glass-dark);
+    border: 2px solid #334455;
+    color: #cccccc;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* 1. The "Hard-Action" Button */
+.btn-hard, .btn, .btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info {
+    background-color: #ffffff !important;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-color) !important;
+    font-family: 'Michroma', sans-serif;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 10px 20px;
+    box-shadow: var(--block-shadow-sm);
+    transition: background 0s, color 0s, transform 0.1s !important; /* Instant color change */
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: var(--text-primary) !important;
+    color: #ffffff !important;
+    box-shadow: var(--block-shadow-sm) !important; /* Keep shadow */
+}
+
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px rgba(0, 0, 0, 1) !important; /* Consume the shadow */
+}
+
+/* Contextual overrides for buttons to maintain purpose but keep the aesthetic */
+.btn-danger:hover {
+    background-color: #ff3333 !important;
+}
+.btn-success:hover {
+    background-color: var(--lime) !important;
+    color: black !important;
+}
+.btn-primary:hover {
+    background-color: var(--cobalt) !important;
+}
+
+/* 2. The Glass Input Field */
+.glass-input, .form-control {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: none !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    transition: background 0.2s !important;
+}
+
+.glass-input:focus, .form-control:focus {
+    background: var(--lime) !important;
+    color: black !important;
+    box-shadow: none !important; /* override bootstrap glow */
+    outline: none !important;
+}
+
+/* Dark mode inputs */
+.glass-panel-dark .form-control {
+    color: #fff;
+    border-bottom: 2px solid #334455 !important;
+}
+
+/* 3. The "DR-11" Data Toggle (Status Indicators) */
+.dr-toggle {
+    display: inline-flex;
+    align-items: center;
+    border: 2px solid var(--border-color);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: bold;
+    background: white;
+}
+
+.dr-toggle .dr-box {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 2px solid var(--border-color);
+    background: white;
+}
+
+.dr-toggle.active .dr-box {
+    background: var(--cobalt);
+    color: white;
+}
+
+.dr-toggle-label {
+    padding: 0 10px;
+    text-transform: uppercase;
+}
+
+/* Navbar Tuning */
+.navbar-maximalist {
+    background: var(--glass-light);
+    border-bottom: 3px solid var(--border-color);
+    box-shadow: var(--block-shadow);
+    padding: 10px 40px;
+    backdrop-filter: grayscale(0.2);
+}
+
+.navbar-maximalist .navbar-brand {
+    font-family: 'Michroma', sans-serif;
+    color: var(--text-primary) !important;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.navbar-maximalist .nav-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--text-primary) !important;
+    border: 2px solid transparent;
+}
+
+.navbar-maximalist .nav-link:hover {
+    background: var(--text-primary);
+    color: white !important;
+}
+
+/* Type Hierarchy */
+.label-sys {
+    font-family: 'Michroma', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 900;
+    border-bottom: 3px solid var(--border-color);
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    display: block;
+    text-transform: uppercase;
+}
+
+/* Custom Cards */
+.card {
+    border: 2px solid var(--border-color) !important;
+    box-shadow: var(--block-shadow-sm);
+    background: white;
+}
+
+.card-header {
+    background: var(--ghost-ash);
+    border-bottom: 2px solid var(--border-color) !important;
+    font-family: 'Michroma', sans-serif;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+/* Tables */
+.table {
+    border: 2px solid var(--border-color);
+}
+
+.table th {
+    background-color: var(--ghost-ash) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    font-family: 'Michroma', sans-serif;
+    font-size: 0.8rem;
+}
+
+.table td {
+    vertical-align: middle;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--text-primary);
+}

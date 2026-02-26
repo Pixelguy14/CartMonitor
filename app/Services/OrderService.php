@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\OrderRepository;
 use App\Repositories\CartRepository;
+use App\Repositories\ProductRepository;
 use App\Core\Database;
 use Exception;
 
@@ -14,11 +15,17 @@ class OrderService extends BaseService
 {
     private OrderRepository $orderRepository;
     private CartRepository $cartRepository;
+    private ProductRepository $productRepository;
 
-    public function __construct()
+    public function __construct(
+        OrderRepository $orderRepository,
+        CartRepository $cartRepository,
+        ProductRepository $productRepository
+        )
     {
-        $this->orderRepository = new OrderRepository();
-        $this->cartRepository = new CartRepository();
+        $this->orderRepository = $orderRepository;
+        $this->cartRepository = $cartRepository;
+        $this->productRepository = $productRepository;
     }
 
     /**
@@ -33,15 +40,7 @@ class OrderService extends BaseService
 
             // 1. Obtener items del carrito y BLOQUEAR las filas de producto correspondientes.
             // Esto evita que otro usuario compre concurrentemente el último artículo.
-            $stmt = $db->prepare("
-                SELECT c.product_id, c.quantity, p.price, p.stock_quantity, p.name 
-                FROM cart_items c 
-                JOIN products p ON c.product_id = p.id 
-                WHERE c.user_id = :u 
-                FOR UPDATE
-            ");
-            $stmt->execute(['u' => $userId]);
-            $items = $stmt->fetchAll();
+            $items = $this->cartRepository->getItemsForUpdate($userId);
 
             if (empty($items)) {
                 $db->rollBack();
@@ -63,11 +62,12 @@ class OrderService extends BaseService
             $orderId = $this->orderRepository->createOrder($userId, $totalAmount);
 
             // 4. Crear Detalle (Order items) e impactar Inventario
-            $updateStockStmt = $db->prepare("UPDATE products SET stock_quantity = stock_quantity - :q WHERE id = :id");
-
             foreach ($items as $item) {
                 $this->orderRepository->addOrderItem($orderId, $item['product_id'], $item['quantity'], $item['price']);
-                $updateStockStmt->execute(['q' => $item['quantity'], 'id' => $item['product_id']]);
+
+                // Calculamos nueva cantidad
+                $newStock = $item['stock_quantity'] - $item['quantity'];
+                $this->productRepository->updateStock($item['product_id'], $newStock);
             }
 
             // 5. Vaciar el carrito
@@ -79,7 +79,9 @@ class OrderService extends BaseService
 
         }
         catch (Exception $e) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             return ['success' => false, 'message' => 'Error al procesar la compra: Intenta de nuevo.'];
         }
     }

@@ -14,10 +14,10 @@ class CartService extends BaseService
     private CartRepository $cartRepository;
     private ProductRepository $productRepository;
 
-    public function __construct()
+    public function __construct(CartRepository $cartRepository, ProductRepository $productRepository)
     {
-        $this->cartRepository = new CartRepository();
-        $this->productRepository = new ProductRepository();
+        $this->cartRepository = $cartRepository;
+        $this->productRepository = $productRepository;
     }
 
     /**

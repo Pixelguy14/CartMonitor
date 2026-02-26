@@ -2,9 +2,9 @@
 
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card shadow-sm mt-5">
-            <div class="card-body">
-                <h3 class="card-title text-center mb-4">Crear cuenta</h3>
+        <div class="glass-panel mt-5">
+            <div>
+                <span class="label-sys text-center w-100 d-block mb-4">SYSTEM_REGISTRATION</span>
 
                 <?php if (!empty($error)): ?>
                 <div class="alert alert-danger">
@@ -18,29 +18,32 @@ endif; ?>
                         value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8')?>">
 
                     <div class="mb-3">
-                        <label for="username" class="form-label">Nombre de usuario</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
+                        <label for="username" class="form-label font-monospace small fw-bold">IDENTIFICADOR
+                            (USUARIO)</label>
+                        <input type="text" class="form-control glass-input" id="username" name="username" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <label for="email" class="form-label font-monospace small fw-bold">CORREO ELECTRÓNICO</label>
+                        <input type="email" class="form-control glass-input" id="email" name="email" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <label for="password" class="form-label font-monospace small fw-bold">CONTRASEÑA</label>
+                        <input type="password" class="form-control glass-input" id="password" name="password" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label">Confirmar Contraseña</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
-                            required>
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label font-monospace small fw-bold">CONFIRMAR
+                            CONTRASEÑA</label>
+                        <input type="password" class="form-control glass-input" id="confirm_password"
+                            name="confirm_password" required>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100">Registrarse</button>
-                    <p class="mt-3 text-center text-muted"><small>¿Ya tienes cuenta? <a href="/login">Inicia sesión
-                                aquí</a></small></p>
+                    <button type="submit" class="btn btn-hard btn-success w-100 mb-3">REGISTRARSE</button>
+                    <p class="mt-3 text-center text-muted font-monospace"><small>¿YA ESTÁS REGISTRADO? <a href="/login"
+                                class="fw-bold">INICIA SESIÓN
+                                AQUÍ</a></small></p>
                 </form>
             </div>
         </div>

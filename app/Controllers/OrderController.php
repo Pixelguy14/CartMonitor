@@ -10,11 +10,15 @@ use App\Core\SessionManager;
  */
 class OrderController extends BaseController
 {
-    private OrderService $orderService;
+    private OrderService $service;
 
     public function __construct()
     {
-        $this->orderService = new OrderService();
+        $this->service = new OrderService(
+            new \App\Repositories\OrderRepository(),
+            new \App\Repositories\CartRepository(),
+            new \App\Repositories\ProductRepository()
+            );
     }
 
     /**
@@ -31,7 +35,7 @@ class OrderController extends BaseController
 
         $userId = $_SESSION['user_id'];
 
-        $ordersRaw = $this->orderService->getUserOrders($userId);
+        $ordersRaw = $this->service->getUserOrders($userId);
 
         // Zero Raw Data
         $orders = [];
@@ -42,7 +46,7 @@ class OrderController extends BaseController
             }
 
             // Traer items de la orden
-            $itemsRaw = $this->orderService->getOrderItems($order['id'], $userId);
+            $itemsRaw = $this->service->getOrderItems($order['id'], $userId);
             $order['items'] = [];
             foreach ($itemsRaw as $item) {
                 $i = [];

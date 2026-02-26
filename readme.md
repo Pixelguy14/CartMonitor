@@ -1,77 +1,93 @@
 # CartMonitor: A Pure PHP Layered E-commerce Engine
 
-Ejercicio de arquitectura en capas con seguridad básica y despliegue moderno.
+![CartMonitor Architecture](public/images/Diagrama_entidad_relacion.png)
 
-## Explicacion de la arquitectura
+CartMonitor es un motor de comercio electrónico de alto rendimiento desarrollado íntegramente en **PHP 8.2 (Vanilla)**. El proyecto demuestra una plataforma transaccional robusta, segura y escalable sin depender de frameworks externos, utilizando una arquitectura de capas estricta y contenedores Docker para un despliegue universal.
 
-docker compose up -d --build # forzamos que se construya la imagen al iniciar
+---
 
-docker ps # verificar los contenedores activos
+## Características Principales
 
-docker logs cartmonitor_app # verificar logs del contenedor
+- **Arquitectura en Capas**: Se presenta la división clara entre Rutas, Controladores, Servicios y Repositorios.
+- **Seguridad Integral**: Protecciones nativas contra SQL Injection (Prepared Statements), CSRF (Tokens dinámicos) y XSS (Escape sistemático).
+- **Checkout Transaccional**: Manejo de concurrencia y bloqueo de stock mediante transacciones de base de datos (`FOR UPDATE`).
+- **Diseño UI UX Personalizado**: Basado en un diseño Maximalista tecnico, es una interfaz profesional de alto contraste optimizada para paneles de administración y catálogos densos.
+- **Multi-Rol**: Soporte para Usuarios, Proveedores y Administradores.
 
-docker stop cartmonitor_app # detener contenedor
-docker stop cartmonitor_db # detener contenedor
-docker rm cartmonitor_app -f # eliminar contenedor
-docker rm cartmonitor_db -f # eliminar contenedor
+---
 
-docker compose up -d # para reactivar el docker
+## Guía de Instalación (Paso a Paso)
 
-docker compose down -v # Para borrar los contenedores y el volumen de datos viejo.
-docker compose up -d # Para iniciar todo de nuevo y que MySQL ejecute el init.sql.
-
-Accede en http://localhost:8081. 
-
-
-Servicios:
-        App Container: PHP 8.2 + Apache (con mod_rewrite habilitado para el Front Controller).
-        DB Container: MySQL 8.0.
-
-        
-Estructura de Directorios:
-/CartMonitor
-├── app/
-│   ├── Controllers/ (Recibe request, llama service)
-│   ├── Core/        (Router manual, Singleton DB)
-│   ├── Middlewares/ (Manejo de seguridad y sesiones de los distintos roles)
-│   ├── Repositories/(Queries SQL con PDO)
-│   ├── Routes/      (Mapeo de URLs)
-│   └── Services/    (Lógica de negocio: stock, totales)
-├── database/        (Base de datos y scripts de inicialización)
-├── public/          (Único punto de entrada: index.php, assets)
-│   ├── css/         (Estilos CSS)
-│   ├── images/      (Diagramas y otras imagenes relacionadas al desarrollo)
-│   └── storage/     (Almacenamiento de imágenes con link simbolico)
-├── resources/views/ (Plantillas HTML/Bootstrap)
-│   ├── admin/       (Plantillas para el admin)
-│   ├── auth/        (Plantillas de inicio de sesion y registro)
-│   ├── cart/        (Plantillas del carrito)
-│   ├── catalog/     (Plantillas del catalogo)
-│   ├── layout/      (Plantillas de layout)
-│   ├── order/       (Plantillas de orden)
-│   ├── profile/     (Plantillas de perfil)
-│   └── provider/    (Plantillas de proveedor)
-├── storage/images/  (Almacenamiento de imágenes)
-└── .env             (Configuración sensible)
-
-
-## Configuración de Almacenamiento (Imágenes)
-El sistema guarda las imágenes en la carpeta raíz `storage/` para mayor seguridad. Para que estas sean visibles en la web, es necesario crear un enlace simbólico y ajustar permisos:
-
-### Linux / macOS
-Ejecuta desde la raíz del proyecto:
+### 1. Clonar el Repositorio
+Independientemente de tu sistema operativo, comienza descargando el código:
 ```bash
-# Crear enlace simbólico
-ln -s ../storage public/storage
-
-# Dar permisos de escritura para que el contenedor pueda subir archivos
-chmod -R 777 storage
+git clone https://github.com/tu-usuario/CartMonitor.git
+cd CartMonitor
 ```
 
-### Windows (PowerShell Administrador)
-Ejecuta desde la raíz del proyecto:
-```powershell
-# Crear enlace simbólico
-New-Item -ItemType SymbolicLink -Path "public\storage" -Target "..\storage"
+### 2. Configuración de Entorno
+Copia el archivo de variables pre-configuradas:
+```bash
+cp .env.example .env
 ```
-*Nota: En Windows, asegúrate de que Docker tenga permisos de escritura sobre la carpeta del proyecto.*
+> ***Nota**: El archivo viene pre-configurado para funcionar con el entorno Docker por defecto "out-of-the-box".*
+
+---
+
+### Despliegue Universal (Docker)
+
+El orquestador está configurado para resolver automáticamente directorios, permisos de carga (`chmod`) y enlaces simbólicos (`ln -s`) al iniciar, garantizando la misma experiencia "One Click Run" en **Windows, macOS y Linux**.
+
+Abre tu terminal favorita (o PowerShell en Windows) en la carpeta del proyecto y ejecuta:
+```bash
+docker compose up -d --build
+```
+> ***Nota**: Asegúrate de tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/macOS) o Docker Engine (Linux).*
+
+```bash
+docker compose up -d # Para correr el proyecto en docker una vez construido
+```
+---
+
+## Acceso Rápido al Sistema
+
+Una vez finalizada la carga de los contenedores (`docker ps` para verificar), los datos base se habrán inyectado vía **Seeds**. 
+Accede desde tu navegador:
+
+- **Frontend**: [http://localhost:8081](http://localhost:8081)
+
+### Credenciales de Prueba (Precargadas)
+- **Administrador**: `admin@cartmonitor.com` / `admin123`
+- **Proveedor de Inventario**: `proveedor@cartmonitor.com` / `admin123`
+
+---
+
+## Estructura del Proyecto
+
+```text
+├── app/
+│   ├── Controllers/  # Orquestación de peticiones
+│   ├── Core/         # Kernel del sistema (Router, DB Singleton, Config)
+│   ├── Repositories/ # Capa de Persistencia (Abstracción de PDO)
+│   ├── Services/     # Lógica de Dominio (Validaciones complejas y transacciones)
+│   └── Routes/       # Definiciones de URLs (web.php)
+├── public/           # Punto de entrada (index.php) y Assets
+├── resources/views/  # Plantillas UI (Bootstrap 5)
+├── storage/images/   # Almacenamiento persistente de productos
+└── database/         # Esquemas SQL e inicialización
+```
+
+> [!WARNING]
+> Esto es un proyecto en docker, si terminaste de hacer pruebas no olvides eliminar los recursos del docker usando:
+> ```bash
+> docker compose down -v # para eliminar el volumen y la base de datos
+> ```
+> Recuerda usar "docker ps" para verificar que los contenedores se hayan detenido y eliminado.
+> Para elimnar el docker completo (con todos los contenedores, volumenes, etc) usa:
+> ```bash
+> docker compose down -v --rmi all --remove-orphans
+> ```
+---
+
+## Licencia
+Este proyecto fue desarrollado con fines educativos y de portafolio profesional bajo la arquitectura de software avanzada.

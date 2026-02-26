@@ -10,6 +10,9 @@ services:
       - "8081:80" # Evitamos el 8080. Acceso vía http://localhost:8081
     volumes:
       - ./:/var/www/html
+      - ./storage:/var/www/html/storage
+    entrypoint: >
+      bash -c " mkdir -p /var/www/html/storage/images && chmod -R 777 /var/www/html/storage && (ln -sf /var/www/html/storage /var/www/html/public/storage || true) && exec apache2-foreground"
     environment:
       - DB_HOST=cartmonitor-db
       - DB_NAME=CartMonitor
@@ -34,7 +37,8 @@ services:
       - "3307:3306" # Mapeo externo 3307 para no chocar con MySQLs locales
     volumes:
       - cartmonitor_db_data:/var/lib/mysql
-      - ./database/cartmonitor.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/cartmonitor.sql:/docker-entrypoint-initdb.d/1_init.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/2_seed.sql:ro
     networks:
       - cartmonitor-network
 

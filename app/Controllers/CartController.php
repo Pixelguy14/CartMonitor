@@ -10,13 +10,17 @@ use App\Services\OrderService;
  */
 class CartController extends BaseController
 {
-    private CartService $cartService;
+    private CartService $service;
     private OrderService $orderService;
 
     public function __construct()
     {
-        $this->cartService = new CartService();
-        $this->orderService = new OrderService();
+        $cartRepo = new \App\Repositories\CartRepository();
+        $productRepo = new \App\Repositories\ProductRepository();
+        $orderRepo = new \App\Repositories\OrderRepository();
+
+        $this->service = new CartService($cartRepo, $productRepo);
+        $this->orderService = new OrderService($orderRepo, $cartRepo, $productRepo);
     }
 
     /**
@@ -34,7 +38,7 @@ class CartController extends BaseController
 
         $userId = $_SESSION['user_id'];
 
-        $cartDataRaw = $this->cartService->getCartTotals($userId);
+        $cartDataRaw = $this->service->getCartTotals($userId);
 
         // Zero Raw Data
         $cartData = ['items' => [], 'total' => $this->escape($cartDataRaw['total'])];
@@ -81,8 +85,9 @@ class CartController extends BaseController
         $userId = $_SESSION['user_id'];
         $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
         $qty = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
+        // isset sirve para verificar si una variable existe y no es null
 
-        $result = $this->cartService->addToCart($userId, $productId, $qty);
+        $result = $this->service->addToCart($userId, $productId, $qty);
 
         if ($result['success']) {
             \App\Core\SessionManager::setFlash('success', 'Producto agregado correctamente.');
@@ -114,7 +119,7 @@ class CartController extends BaseController
         $productId = (int)($_POST['product_id'] ?? 0);
         $qty = (int)($_POST['quantity'] ?? 0);
 
-        $result = $this->cartService->updateCartItem($userId, $productId, $qty);
+        $result = $this->service->updateCartItem($userId, $productId, $qty);
 
         if ($result['success']) {
             \App\Core\SessionManager::setFlash('success', $result['message']);
@@ -145,7 +150,7 @@ class CartController extends BaseController
         $userId = $_SESSION['user_id'];
         $productId = (int)($_POST['product_id'] ?? 0);
 
-        $result = $this->cartService->removeCartItem($userId, $productId);
+        $result = $this->service->removeCartItem($userId, $productId);
 
         if ($result['success']) {
             \App\Core\SessionManager::setFlash('success', $result['message']);

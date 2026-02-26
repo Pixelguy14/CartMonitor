@@ -9,11 +9,11 @@ use App\Services\ProductService;
  */
 class ProductController extends BaseController
 {
-    private ProductService $productService;
+    private ProductService $service;
 
     public function __construct()
     {
-        $this->productService = new ProductService();
+        $this->service = new ProductService(new \App\Repositories\ProductRepository());
     }
 
     /**
@@ -25,7 +25,7 @@ class ProductController extends BaseController
         $minPrice = isset($_GET['min_price']) && is_numeric($_GET['min_price']) ? (float)$_GET['min_price'] : null;
         $maxPrice = isset($_GET['max_price']) && is_numeric($_GET['max_price']) ? (float)$_GET['max_price'] : null;
 
-        $productsRaw = $this->productService->listAllProducts($q, $minPrice, $maxPrice);
+        $productsRaw = $this->service->listAllProducts($q, $minPrice, $maxPrice);
 
         // Zero Raw Data: Escapamos todos los productos
         $products = [];
@@ -49,7 +49,7 @@ class ProductController extends BaseController
      */
     public function show($id)
     {
-        $productRaw = $this->productService->getProductById((int)$id);
+        $productRaw = $this->service->getProductById((int)$id);
 
         if (!$productRaw) {
             header("HTTP/1.0 404 Not Found");

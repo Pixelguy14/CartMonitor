@@ -71,4 +71,21 @@ class CartRepository extends BaseRepository
         $stmt = $this->db->prepare("DELETE FROM cart_items WHERE user_id = :u");
         return $stmt->execute(['u' => $userId]);
     }
+
+    /**
+     * Obtiene los ítems del carrito bloqueando las filas de producto para el checkout
+     * (FOR UPDATE para evitar condiciones de carrera)
+     */
+    public function getItemsForUpdate(int $userId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT c.product_id, c.quantity, p.price, p.stock_quantity, p.name 
+            FROM cart_items c 
+            JOIN products p ON c.product_id = p.id 
+            WHERE c.user_id = :u 
+            FOR UPDATE
+        ");
+        $stmt->execute(['u' => $userId]);
+        return $stmt->fetchAll();
+    }
 }

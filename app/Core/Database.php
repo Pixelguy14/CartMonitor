@@ -45,8 +45,17 @@ class Database
                 self::$instance = new PDO($dsn, $user, $pass, $options); // Creamos la instancia de la base de datos
             }
             catch (PDOException $e) {
-                // En un entorno real, lo ideal es registrar el error en un archivo de log
-                // para no exponer informacion sensible
+                // If we are in development, or if the database is just starting up (Connection Refused: 2002)
+                // We show a friendly "wait a moment" screen instead of a fatal error.
+                // Cuando la base de datos apenas está iniciando puede saltar un error (Connection Refused: 2002)
+                // o un error de autenticación (1045) o un error de base de datos (1049) está es una interfáz 
+                // preventiva para que el usuario no vea un error fatal y se espante :P
+                if ($e->getCode() == 2002 || $e->getCode() == 1045 || $e->getCode() == 1049) {
+                    require_once __DIR__ . '/../../resources/views/errors/db_error.php';
+                    exit;
+                }
+
+                // For other errors, we throw the exception
                 throw new PDOException($e->getMessage(), (int)$e->getCode());
             }
         }
